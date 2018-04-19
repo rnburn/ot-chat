@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package ot_chat;
+
+import "google/protobuf/struct.proto";
+
+message Configuration {
+  // IP address to use for the chat server
+  string address = 1;
+
+  // Port to use for the chat server
+  uint32 port = 2;
+
+  // Path to the index HTML file to serve
+  string index_html_file = 3;
+
+  // Path to a particular vendor's tracer library to use
+  string tracer_library = 4;
+
+  // Configuration to use when constructing the vendor tracer
+  google.protobuf.Struct tracer_configuration = 5;  
+}

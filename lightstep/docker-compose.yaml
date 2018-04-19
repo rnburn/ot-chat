@@ -1,0 +1,22 @@
+version: '2'
+services:
+
+  chat-server:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    volumes:
+      - ./init:/init
+    environment:
+      - LIGHTSTEP_ACCESS_TOKEN=${LIGHTSTEP_ACCESS_TOKEN}
+    networks:
+      chatnet:
+        aliases:
+          - chat-server
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+
+networks:
+  chatnet: {}

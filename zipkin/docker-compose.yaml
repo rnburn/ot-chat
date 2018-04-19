@@ -1,0 +1,32 @@
+version: '2'
+services:
+
+  chat-server:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    volumes:
+      - ./init:/init
+    networks:
+      chatnet:
+        aliases:
+          - chat-server
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+
+  zipkin:
+    image: openzipkin/zipkin
+    networks:
+      chatnet:
+        aliases:
+          - zipkin
+    expose:
+      - "9411"
+
+    ports:
+      - "9411:9411"
+
+networks:
+  chatnet: {}
