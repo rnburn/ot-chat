@@ -21,3 +21,5 @@ docker-compose up
 cd zipkin
 docker-compose up
 ```
+
+Then visit [`http://localhost:8080`](http://localhost:8080).
