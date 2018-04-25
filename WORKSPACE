@@ -1,6 +1,6 @@
 git_repository(
     name = "com_github_nelhage_rules_boost",
-    commit = "69e96e724cbe746f63d993fa8f6bf772e1ebc5cc",
+    commit = "5e746bc69de4142ce467b372339ab110a8d67781",
     remote = "https://github.com/nelhage/rules_boost",
 )
 

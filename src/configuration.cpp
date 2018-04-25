@@ -3,6 +3,7 @@
 
 #include <google/protobuf/util/json_util.h>
 #include <opentracing/noop.h>
+#include <boost/filesystem.hpp>
 
 #include <fstream>
 #include <stdexcept>
@@ -73,6 +74,39 @@ static void load_tracer(const Configuration& config_protobuf,
   config.tracer = std::move(*tracer_maybe);
 }
 
+static void load_resources_impl(
+    const boost::filesystem::path& html_root,
+    const boost::filesystem::path& directory,
+    std::unordered_map<std::string, resource>& resources) {
+  for (auto& file_path : boost::filesystem::directory_iterator(directory)) {
+    if (boost::filesystem::is_directory(file_path))
+      return load_resources_impl(html_root, file_path, resources);
+    if (!boost::filesystem::is_regular_file(file_path)) continue;
+
+    ot_chat::resource resource;
+    auto path = file_path.path();
+    if (path.extension() == ".html")
+      resource.content_type = "text/html";
+    else if (path.extension() == ".js")
+      resource.content_type = "application/javascript";
+    else
+      continue;
+    resource.content = read_file(path.string().c_str());
+    resources["/" + boost::filesystem::relative(path, html_root).string()] =
+        std::move(resource);
+  }
+}
+
+static std::unordered_map<std::string, resource> load_resources(
+    const boost::filesystem::path& html_root) {
+  if (!boost::filesystem::is_directory(html_root))
+    throw std::runtime_error{
+        fmt::format("{} must be a directory", html_root.string())};
+  std::unordered_map<std::string, resource> result;
+  load_resources_impl(html_root, html_root, result);
+  return result;
+}
+
 configuration load_configuration(const std::shared_ptr<spdlog::logger>& logger,
                                  const char* config_file) {
   auto config_json = read_file(config_file);
@@ -99,7 +133,7 @@ configuration load_configuration(const std::shared_ptr<spdlog::logger>& logger,
   if (result.tracer == nullptr)
     throw std::runtime_error("Failed to construct a tracer");
 
-  result.html = read_file(config_protobuf.index_html_file().c_str());
+  result.resources = load_resources(config_protobuf.html_directory());
 
   return result;
 }

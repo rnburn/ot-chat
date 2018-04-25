@@ -19,6 +19,49 @@ static void set_request_tags(const http::request<http::string_body>& req,
               opentracing::string_view{target.data(), target.size()});
 }
 
+static http::response<http::span_body<const char>> make_response(
+    const http::request<http::string_body>& req, http::status status,
+    const char* content_type,
+    boost::beast::span<const char> body) {
+  http::response<http::span_body<const char>> res{status, req.version()};
+  res.body() = body;
+  res.content_length(body.size());
+  res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+  res.set(http::field::content_type, content_type);
+  res.keep_alive(req.keep_alive());
+  return res;
+}
+
+static http::response<http::span_body<const char>> make_response(
+    const http::request<http::string_body>& req, http::status status,
+    const char* content_type, const char* body) {
+  return make_response(req, status, content_type, {body, std::strlen(body)});
+}
+
+static http::response<http::span_body<const char>> handle_request(
+    const configuration& config, const http::request<http::string_body>& req) {
+  if (req.method() != http::verb::get && req.method() != http::verb::head) {
+    return make_response(req, http::status::bad_request, "text/html",
+                         "Unknown HTTP-method");
+  }
+
+  auto target = req.target();
+  if (target == "/")
+    target = "/index.html";
+  auto iter = config.resources.find(std::string{target});
+  if (iter == config.resources.end())
+    return make_response(req, http::status::bad_request, "text/html",
+                         "Illegal request target");
+  auto& resource = iter->second;
+  auto res =
+      make_response(req, http::status::ok, resource.content_type,
+                    {resource.content.data(), resource.content.size()});
+  if (req.method() == http::verb::head) {
+    res.body() = {};
+  }
+  return res;
+}
+
 http_session::http_session(const configuration& config, chat_room& chat_room,
                            tcp::socket&& socket)
     : config_{config}, chat_room_{chat_room}, socket_{std::move(socket)} {}
@@ -53,28 +96,7 @@ void http_session::on_read(boost::system::error_code ec,
     return;
   }
 
-  if (req_.method() != http::verb::get && req_.method() != http::verb::head) {
-    res_ = http::response<http::string_body>{http::status::bad_request,
-                                             req_.version()};
-    res_.body() = "Unknown HTTP-method";
-    res_.content_length(res_.body().size());
-  } else if (req_.target() != "/") {
-    res_ = http::response<http::string_body>{http::status::bad_request,
-                                             req_.version()};
-    res_.body() = "Illegal request target";
-    res_.content_length(res_.body().size());
-  } else if (req_.method() == http::verb::head) {
-    res_ = http::response<http::string_body>{http::status::ok, req_.version()};
-    res_.content_length(config_.html.size());
-  } else {
-    res_ = http::response<http::string_body>{http::status::ok, req_.version()};
-    res_.body() = config_.html;
-    res_.content_length(res_.body().size());
-  }
-
-  res_.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-  res_.set(http::field::content_type, "text/html");
-  res_.keep_alive(req_.keep_alive());
+  res_ = handle_request(config_, req_);
 
   auto write_span = config_.tracer->StartSpan(
       "WriteHttp", {opentracing::FollowsFrom(&read_span->context())});

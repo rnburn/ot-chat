@@ -22,7 +22,7 @@ class http_session : public std::enable_shared_from_this<http_session> {
   chat_room& chat_room_;
   tcp::socket socket_;
   http::request<http::string_body> req_;
-  http::response<http::string_body> res_;
+  http::response<http::span_body<const char>> res_;
   boost::beast::flat_buffer buffer_;
 
   void do_read();

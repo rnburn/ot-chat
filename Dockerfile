@@ -21,14 +21,15 @@ RUN set -x \
 # Build chat-server
   && cd /src \
   && bazel build //:ot-chat \
-  && mkdir /app \
+  && mkdir -p /app/html \
   && cp bazel-bin/ot-chat /app \
-  && cp index.html /app
+  && cp index.html /app/html
 
 FROM ubuntu:18.04
 RUN  apt-get update \
   && apt-get install --no-install-recommends --no-install-suggests -y \
-             gettext-base 
+             gettext-base \
+             wget
 WORKDIR /app
 COPY --from=ot-chat-build /app .
 

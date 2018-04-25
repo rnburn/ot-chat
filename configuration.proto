@@ -11,8 +11,8 @@ message Configuration {
   // Port to use for the chat server
   uint32 port = 2;
 
-  // Path to the index HTML file to serve
-  string index_html_file = 3;
+  // Path to HTML directory
+  string html_directory = 3;
 
   // Path to a particular vendor's tracer library to use
   string tracer_library = 4;

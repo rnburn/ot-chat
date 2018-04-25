@@ -24,7 +24,7 @@ cc_binary(
         "@com_github_gabime_spdlog//:spdlog",
         "@io_opentracing_cpp//:opentracing",
         "@boost//:beast",
-        "@boost//:endian", #See https://github.com/nelhage/rules_boost/issues/60
+        "@boost//:filesystem",
     ],
     copts = [
         "-std=c++14",

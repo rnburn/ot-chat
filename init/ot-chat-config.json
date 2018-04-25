@@ -1,5 +1,5 @@
 {
   "address":"0.0.0.0",
   "port": 8080,
-  "index_html_file" : "/app/index.html"
+  "html_directory" : "/app/html",
 }

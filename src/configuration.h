@@ -5,9 +5,16 @@
 #include <opentracing/tracer.h>
 #include <boost/asio/ip/tcp.hpp>
 #include <opentracing/dynamic_load.h>
+
+#include <unordered_map>
 using tcp = boost::asio::ip::tcp;
 
 namespace ot_chat {
+struct resource {
+  std::string content;
+  const char* content_type;
+};
+
 struct configuration {
   std::shared_ptr<spdlog::logger> logger;
 
@@ -23,7 +30,8 @@ struct configuration {
   std::shared_ptr<opentracing::Tracer> tracer;
 
   tcp::endpoint endpoint;
-  std::string html;
+
+  std::unordered_map<std::string, resource> resources;
 };
 
 configuration load_configuration(const std::shared_ptr<spdlog::logger>& logger,
