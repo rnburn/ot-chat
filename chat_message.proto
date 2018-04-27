@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package ot_chat;
+
+message ChatMessage {
+  // The text of a chat message
+  string content = 1;
+
+  // If present, an encoding of the active span context
+  map<string, string> span_context = 2;
+};
