@@ -26,6 +26,9 @@ class chat_session : public std::enable_shared_from_this<chat_session> {
   void send(const opentracing::SpanContext* parent_span_context,
             const std::shared_ptr<const boost::beast::multi_buffer>& message);
 
+  void send(const opentracing::SpanContext* parent_span_context,
+            const std::shared_ptr<const std::string>& text);
+
  private:
   const configuration& config_;
   chat_room& chat_room_;
@@ -36,13 +39,16 @@ class chat_session : public std::enable_shared_from_this<chat_session> {
   struct WriteEvent {
     std::shared_ptr<opentracing::Span> span;
     std::shared_ptr<const boost::beast::multi_buffer> message;
+    std::shared_ptr<const std::string> text;
   };
   std::queue<WriteEvent> message_queue_;
 
   void do_read();
+
   void do_write(
       const std::shared_ptr<opentracing::Span>& span,
-      const std::shared_ptr<const boost::beast::multi_buffer>& buffer);
+      const std::shared_ptr<const std::string>& text);
+
   void on_accept(opentracing::Span& span, boost::system::error_code ec);
   void on_read(boost::system::error_code ec,
                const std::shared_ptr<boost::beast::multi_buffer>& buffer);

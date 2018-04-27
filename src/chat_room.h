@@ -13,9 +13,13 @@ class chat_room {
  public:
   explicit chat_room(const configuration& config);
 
+  /* void broadcast( */
+  /*     const opentracing::SpanContext* prev_span_context, */
+  /*     const std::shared_ptr<const boost::beast::multi_buffer>& message); */
+
   void broadcast(
       const opentracing::SpanContext* prev_span_context,
-      const std::shared_ptr<const boost::beast::multi_buffer>& message);
+      const std::shared_ptr<const std::string>& text);
 
   void enter(chat_session* chat_session);
   void leave(const chat_session* chat_session);

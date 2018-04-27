@@ -1,5 +1,6 @@
 #include "chat_session.h"
-
+#include "chat_message.pb.h"
+#include "message.h"
 #include "tracing.h"
 
 #include <cassert>
@@ -43,11 +44,12 @@ void chat_session::do_read() {
   });
 }
 
-void chat_session::do_write(
-    const std::shared_ptr<opentracing::Span>& span,
-    const std::shared_ptr<const boost::beast::multi_buffer>& buffer) {
-  ws_.async_write(buffer->data(), [
-    self = shared_from_this(), span = span, buffer = buffer
+void chat_session::do_write(const std::shared_ptr<opentracing::Span>& span,
+                            const std::shared_ptr<const std::string>& text) {
+  auto json = std::make_shared<std::string>();
+  serialize(config_, span->context(), *text, *json);
+  ws_.async_write(boost::asio::buffer(json->data(), json->size()), [
+    self = shared_from_this(), span = span, json = json
   ](boost::system::error_code ec, std::size_t /*bytes_transferred*/) {
     self->on_write(*span, ec);
   });
@@ -55,7 +57,20 @@ void chat_session::do_write(
 
 void chat_session::on_read(boost::system::error_code ec,
     const std::shared_ptr<boost::beast::multi_buffer>& buffer) {
-  auto span = config_.tracer->StartSpan("ReceiveMsg");
+  auto start_timestamp = opentracing::SystemClock::now();
+  std::unique_ptr<opentracing::SpanContext> span_context;
+  std::shared_ptr<std::string> text;
+  bool parse_result = false;
+  if (!ec) {
+    auto json = boost::beast::buffers_to_string(buffer->data());
+    text = std::make_shared<std::string>();
+    parse_result = deserialize(config_, json, span_context, *text);
+  }
+
+  auto span = config_.tracer->StartSpan(
+      "ReceiveMsg", {opentracing::StartTimestamp(start_timestamp),
+                     opentracing::FollowsFrom(span_context.get())});
+
   if (ec == websocket::error::closed) {
     chat_room_.leave(this);
     return;
@@ -64,26 +79,35 @@ void chat_session::on_read(boost::system::error_code ec,
   if (ec) {
     config_.logger->info("read failed: {}", ec.message());
     set_span_error_code(ec, *span);
+    return;
   }
 
-  chat_room_.broadcast(&span->context(), buffer);
+  if (parse_result) {
+    chat_room_.broadcast(&span->context(), text);
+  } else {
+    config_.logger->info("failed to deserialize chat message");
+    span->SetTag(opentracing::ext::error, true);
+    span->Log({{"event", "error"},
+              {"message", "failed to deserialize chat message"}});
+  }
+
   span->Finish();
   do_read();
 }
 
 void chat_session::send(
     const opentracing::SpanContext* parent_span_context,
-    const std::shared_ptr<const boost::beast::multi_buffer>& message) {
+    const std::shared_ptr<const std::string>& text) {
   std::lock_guard<std::mutex> lock_guard_{write_mutex_};
   std::shared_ptr<opentracing::Span> span{config_.tracer->StartSpan(
       "WriteMsg", {opentracing::FollowsFrom(parent_span_context)})};
   if (write_in_progress_) {
-    message_queue_.push(WriteEvent{span, message});
+    message_queue_.push(WriteEvent{span, {}, text});
     return;
   }
   assert(message_queue_.empty());
   write_in_progress_ = true;
-  do_write(span, message);
+  do_write(span, text);
 }
 
 void chat_session::on_write(opentracing::Span& span, boost::system::error_code ec) {
@@ -99,6 +123,6 @@ void chat_session::on_write(opentracing::Span& span, boost::system::error_code e
   auto write_event = message_queue_.front();
   message_queue_.pop();
   write_in_progress_ = true;
-  do_write(write_event.span, write_event.message);
+  do_write(write_event.span, write_event.text);
 }
 } // namespace ot_chat

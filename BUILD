@@ -11,6 +11,16 @@ cc_proto_library(
     deps = [":ot_chat_configuration_proto"],
 )
 
+proto_library(
+    name = "chat_message_proto",
+    srcs = ["chat_message.proto"],
+)
+
+cc_proto_library(
+    name = "chat_message",
+    deps = [":chat_message_proto"],
+)
+
 cc_binary(
     name = "ot-chat",
     srcs = glob([
@@ -19,6 +29,7 @@ cc_binary(
     ]),
     deps = [
         ":ot_chat_configuration",
+        ":chat_message",
 
         "@com_github_gflags_gflags//:gflags",
         "@com_github_gabime_spdlog//:spdlog",
