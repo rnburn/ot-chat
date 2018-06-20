@@ -36,7 +36,7 @@ COPY --from=ot-chat-build /app .
 
 # Install vendor tracers
 ADD https://363-57146219-gh.circle-artifacts.com/0/liblightstep_tracer_plugin.so /usr/local/lib
-ADD https://190-95814681-gh.circle-artifacts.com/0/libzipkin_opentracing_plugin.so /usr/local/lib
+ADD https://333-95814681-gh.circle-artifacts.com/0/libzipkin_opentracing_plugin.so /usr/local/lib
 ADD https://github.com/rnburn/cpp-client/raw/plugin-store/plugin/libjaegertracing_plugin.so /usr/local/lib
 
 # Add a default init directory that starts with no tracer

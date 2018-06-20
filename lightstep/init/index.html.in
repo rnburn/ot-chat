@@ -21,7 +21,7 @@
     </form>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-    <script type="text/javascript" src="js/opentracing-browser.js"></script>
+    <script type="text/javascript" src="js/opentracing-browser.min.js"></script>
     <script type= "text/javascript" src="js/lightstep-tracer.js"
           data-init_global_tracer="true"
           data-access_token="$LIGHTSTEP_ACCESS_TOKEN"
@@ -55,16 +55,15 @@
           if ("spanContext" in message) {
             let prevContext = tracer.extract(opentracing.FORMAT_TEXT_MAP,
                                              message["spanContext"]);
-            console.log("prevContext" + JSON.stringify(prevContext));
-            console.log("ctxType " + typeof(prevContext));
-            <!-- spanOptions["references"] = [ -->
-            <!--   opentracing.followsFrom(prevContext) -->
-            <!-- ]; -->
+            spanOptions["references"] = [
+              opentracing.followsFrom(prevContext)
+            ];
           }
           let span = tracer.startSpan("ReceiveMsg", spanOptions);
           $('#messages').append($('<li>').text(message["content"]));
           window.scrollTo(0, document.body.scrollHeight);
           span.finish();
+          tracer.flush();
         };
       });
     </script>
