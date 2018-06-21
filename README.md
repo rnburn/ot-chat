@@ -1,11 +1,11 @@
 # ot-chat-example
 
 `ot-chat` reconstructs [sockets.io](https://socket.io/get-started/chat/)'s chat example
-using [Boost.Beast](https://github.com/boostorg/beast). It instruments the application
-for distributed tracing and demonstrates OpenTracing's pluggable tracing API.
+using [Boost.Beast](https://github.com/boostorg/beast) and instruments it for
+distributed tracing.
 
-With it, the same binary can be deployed for any tracer. Examples have been set up with
-`docker-compose` for LightStep, Jaeger, and Zipkin. To run, follow these instructions:
+Examples have been set up with `docker-compose` for LightStep, Jaeger, and
+Zipkin. To run, follow these instructions:
 
 ```sh
 # LightStep
@@ -23,3 +23,7 @@ docker-compose up
 ```
 
 Then visit [`http://localhost:8080`](http://localhost:8080).
+
+`ot-chat` demonstrates
+1. Pluggable tracing by using OpenTracing's dynamic loading API. See `load_tracer` in [configuration.cpp](https://github.com/rnburn/ot-chat/blob/master/src/configuration.cpp#L41).
+2. Context propagation with JavaScript using a JSON text map encoding. See [message.cpp](https://github.com/rnburn/ot-chat/blob/master/src/message.cpp) and [index.html.in](https://github.com/rnburn/ot-chat/blob/master/lightstep/init/index.html.in).
