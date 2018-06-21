@@ -25,5 +25,5 @@ docker-compose up
 Then visit [`http://localhost:8080`](http://localhost:8080).
 
 `ot-chat` demonstrates
-1. Pluggable tracing by using OpenTracing's dynamic loading API. See `load_tracer` in [configuration.cpp](https://github.com/rnburn/ot-chat/blob/master/src/configuration.cpp#L41).
+1. Pluggable tracing using OpenTracing's dynamic loading API. See `load_tracer` in [configuration.cpp](https://github.com/rnburn/ot-chat/blob/master/src/configuration.cpp#L41).
 2. Context propagation with JavaScript using a JSON text map encoding. See [message.cpp](https://github.com/rnburn/ot-chat/blob/master/src/message.cpp) and [index.html.in](https://github.com/rnburn/ot-chat/blob/master/lightstep/init/index.html.in).
