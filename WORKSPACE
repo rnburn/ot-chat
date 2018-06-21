@@ -30,6 +30,6 @@ git_repository(
 
 git_repository(
     name = "io_opentracing_cpp",
-    commit = "630495ca7d45c21a4b9ca2f7c03f80c1d9c96f70",
+    commit = "900f9d9297a71ddf4a5dff2051a01493014c07c5",
     remote = "https://github.com/opentracing/opentracing-cpp.git",
 )

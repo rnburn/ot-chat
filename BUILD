@@ -49,6 +49,7 @@ cc_binary(
                 "-pthread",
                 "-static-libstdc++",
                 "-static-libgcc",
+                "-lstdc++",
             ],
         }),
 )

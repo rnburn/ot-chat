@@ -35,9 +35,16 @@ WORKDIR /app
 COPY --from=ot-chat-build /app .
 
 # Install vendor tracers
-ADD https://363-57146219-gh.circle-artifacts.com/0/liblightstep_tracer_plugin.so /usr/local/lib
-ADD https://333-95814681-gh.circle-artifacts.com/0/libzipkin_opentracing_plugin.so /usr/local/lib
-ADD https://github.com/rnburn/cpp-client/raw/plugin-store/plugin/libjaegertracing_plugin.so /usr/local/lib
+RUN mkdir /tracers
+ADD https://github.com/lightstep/lightstep-tracer-cpp/releases/download/v0.7.1/linux-amd64-liblightstep_tracer_plugin.so.gz /tracers
+ADD https://github.com/rnburn/zipkin-cpp-opentracing/releases/download/v0.4.0/linux-amd64-libzipkin_opentracing_plugin.so.gz /tracers
+ADD https://github.com/jaegertracing/jaeger-client-cpp/releases/download/v0.4.1/libjaegertracing_plugin.linux_amd64.so /tracers
+RUN  cat /tracers/linux-amd64-liblightstep_tracer_plugin.so.gz \
+      | gunzip -c > /usr/local/lib/liblightstep_tracer_plugin.so \
+  && cat /tracers/linux-amd64-libzipkin_opentracing_plugin.so.gz \
+      | gunzip -c > /usr/local/lib/libzipkin_opentracing_plugin.so \
+  && mv /tracers/libjaegertracing_plugin.linux_amd64.so /usr/local/lib/libjaegertracing_plugin.so \
+  && rm -rf /tracers
 
 # Add a default init directory that starts with no tracer
 ADD init .
